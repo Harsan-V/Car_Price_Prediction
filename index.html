@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Used Car Price Predictor</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #1f2937;
+    }
+
+    main {
+      width: min(980px, calc(100% - 32px));
+      margin: 32px auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: #5b6472;
+    }
+
+    .panel {
+      background: #ffffff;
+      border: 1px solid #dbe2ea;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(16, 24, 40, 0.06);
+    }
+
+    .api-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+      align-items: end;
+    }
+
+    .api-row label {
+      flex: 1;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 15px;
+      background: #ffffff;
+      color: #111827;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .result {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 8px;
+      background: #ecfdf5;
+      border: 1px solid #bbf7d0;
+      display: none;
+    }
+
+    .result strong {
+      display: block;
+      font-size: 26px;
+      color: #047857;
+      margin-top: 6px;
+    }
+
+    .error {
+      margin-top: 18px;
+      padding: 14px;
+      border-radius: 8px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      display: none;
+    }
+
+    .list {
+      margin-top: 24px;
+    }
+
+    .prediction {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 0;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .prediction small {
+      color: #64748b;
+    }
+
+    @media (max-width: 760px) {
+      form,
+      .api-row {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Used Car Price Predictor</h1>
+    <p>Enter car details and check the price of the Car!.</p>
+
+    <section class="panel">
+      <form id="predictionForm">
+        <label>
+          Brand
+          <input name="brand" value="Maruti" required />
+        </label>
+
+        <label>
+          Model
+          <input name="model" value="Swift" required />
+        </label>
+
+        <label>
+          Vehicle Age
+          <input name="vehicle_age" type="number" min="0" max="40" value="5" required />
+        </label>
+
+        <label>
+          KM Driven
+          <input name="km_driven" type="number" min="0" max="1000000" value="45000" required />
+        </label>
+
+        <label>
+          Seller Type
+          <select name="seller_type">
+            <option>Individual</option>
+            <option>Dealer</option>
+            <option>Trustmark Dealer</option>
+          </select>
+        </label>
+
+        <label>
+          Fuel Type
+          <select name="fuel_type">
+            <option>Petrol</option>
+            <option>Diesel</option>
+            <option>CNG</option>
+            <option>LPG</option>
+            <option>Electric</option>
+          </select>
+        </label>
+
+        <label>
+          Transmission
+          <select name="transmission_type">
+            <option>Manual</option>
+            <option>Automatic</option>
+          </select>
+        </label>
+
+        <label>
+          Mileage
+          <input name="mileage" type="number" step="0.1" min="0.1" max="50" value="20.4" required />
+        </label>
+
+        <label>
+          Engine CC
+          <input name="engine" type="number" min="1" max="6000" value="1197" required />
+        </label>
+
+        <label>
+          Max Power
+          <input name="max_power" type="number" step="0.1" min="0.1" max="1000" value="81.8" required />
+        </label>
+
+        <label>
+          Seats
+          <input name="seats" type="number" min="2" max="10" value="5" required />
+        </label>
+
+        <div class="actions">
+          <button type="submit">Predict Price</button>
+          <button class="secondary" type="reset">Reset</button>
+        </div>
+      </form>
+
+      <div class="result" id="result"></div>
+      <div class="error" id="error"></div>
+
+      <div class="list">
+        <h2>Saved Predictions</h2>
+        <div id="predictionsList">No predictions loaded yet.</div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.getElementById("predictionForm");
+    const API_BASE_URL = "http://127.0.0.1:8000";
+    const resultBox = document.getElementById("result");
+    const errorBox = document.getElementById("error");
+    const predictionsList = document.getElementById("predictionsList");
+
+    function apiUrl(path) {
+      return `${API_BASE_URL}${path}`;
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+      resultBox.style.display = "none";
+    }
+
+    function clearMessages() {
+      errorBox.style.display = "none";
+      resultBox.style.display = "none";
+    }
+
+    function getCarData() {
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      return {
+        brand: data.brand,
+        model: data.model,
+        vehicle_age: Number(data.vehicle_age),
+        km_driven: Number(data.km_driven),
+        seller_type: data.seller_type,
+        fuel_type: data.fuel_type,
+        transmission_type: data.transmission_type,
+        mileage: Number(data.mileage),
+        engine: Number(data.engine),
+        max_power: Number(data.max_power),
+        seats: Number(data.seats),
+      };
+    }
+
+    function renderPredictions(predictions) {
+      if (!predictions.length) {
+        predictionsList.textContent = "No saved predictions yet.";
+        return;
+      }
+
+      predictionsList.innerHTML = predictions.map((item) => `
+        <div class="prediction">
+          <div>
+            <strong>${item.car.brand} ${item.car.model}</strong><br />
+            <small>${item.car.fuel_type}, ${item.car.transmission_type}, ${item.car.km_driven} km</small>
+          </div>
+          <strong>Rs. ${Number(item.predicted_price).toLocaleString("en-IN")}</strong>
+        </div>
+      `).join("");
+    }
+
+    async function loadPredictions(options = {}) {
+      if (options.clearMessages !== false) {
+        clearMessages();
+      }
+
+      try {
+        const response = await fetch(apiUrl("/predictions"));
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Could not load predictions.");
+        }
+
+        renderPredictions(data);
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      clearMessages();
+
+      try {
+        const response = await fetch(apiUrl("/predict"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ car: getCarData() }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Prediction failed.");
+        }
+
+        resultBox.innerHTML = `
+          Predicted Selling Price
+          <strong>Rs. ${Number(data.predicted_price).toLocaleString("en-IN")}</strong>
+        `;
+        resultBox.style.display = "block";
+        await loadPredictions({ clearMessages: false });
+      } catch (error) {
+        showError(error.message);
+      }
+    });
+
+    document.getElementById("loadPredictions").addEventListener("click", loadPredictions);
+  </script>
+</body>
+</html>
